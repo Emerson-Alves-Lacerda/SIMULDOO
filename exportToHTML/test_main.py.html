@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>test_main.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #6a8759;}
+.s3 { color: #6897bb;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_main.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">fastapi.testclient </span><span class="s0">import </span><span class="s1">TestClient</span>
+<span class="s0">from </span><span class="s1">app.main </span><span class="s0">import </span><span class="s1">app</span>
+
+<span class="s1">client = TestClient(app)</span>
+
+<span class="s0">def </span><span class="s1">test_criar_materia():</span>
+    <span class="s1">response = client.post(</span><span class="s2">&quot;/v1/materias/&quot;</span><span class="s0">, </span><span class="s1">json={</span><span class="s2">&quot;nome&quot;</span><span class="s1">: </span><span class="s2">&quot;Matemática&quot;</span><span class="s0">, </span><span class="s2">&quot;ano&quot;</span><span class="s1">: </span><span class="s3">5</span><span class="s1">})</span>
+    <span class="s0">assert </span><span class="s1">response.status_code </span><span class="s0">in </span><span class="s1">(</span><span class="s3">200</span><span class="s0">, </span><span class="s3">400</span><span class="s1">)  </span><span class="s4"># pode já existir</span>
+
+<span class="s0">def </span><span class="s1">test_listar_materias():</span>
+    <span class="s1">response = client.get(</span><span class="s2">&quot;/v1/materias/&quot;</span><span class="s1">)</span>
+    <span class="s0">assert </span><span class="s1">response.status_code == </span><span class="s3">200</span>
+    <span class="s0">assert </span><span class="s1">isinstance(response.json()</span><span class="s0">, </span><span class="s1">list)</span>
+
+<span class="s0">def </span><span class="s1">test_atualizar_materia():</span>
+    <span class="s1">client.post(</span><span class="s2">&quot;/v1/materias/&quot;</span><span class="s0">, </span><span class="s1">json={</span><span class="s2">&quot;nome&quot;</span><span class="s1">: </span><span class="s2">&quot;Biologia&quot;</span><span class="s0">, </span><span class="s2">&quot;ano&quot;</span><span class="s1">: </span><span class="s3">2</span><span class="s1">})</span>
+    <span class="s1">response = client.put(</span><span class="s2">&quot;/v1/materias/1&quot;</span><span class="s0">, </span><span class="s1">json={</span><span class="s2">&quot;nome&quot;</span><span class="s1">: </span><span class="s2">&quot;Biologia Atualizada&quot;</span><span class="s0">, </span><span class="s2">&quot;ano&quot;</span><span class="s1">: </span><span class="s3">2</span><span class="s1">})</span>
+    <span class="s0">assert </span><span class="s1">response.status_code == </span><span class="s3">200</span>
+    <span class="s0">assert </span><span class="s1">response.json()[</span><span class="s2">&quot;nome&quot;</span><span class="s1">] == </span><span class="s2">&quot;Biologia Atualizada&quot;</span>
+
+<span class="s0">def </span><span class="s1">test_criar_materia_duplicada():</span>
+    <span class="s1">client.post(</span><span class="s2">&quot;/v1/materias/&quot;</span><span class="s0">, </span><span class="s1">json={</span><span class="s2">&quot;nome&quot;</span><span class="s1">: </span><span class="s2">&quot;Física&quot;</span><span class="s0">, </span><span class="s2">&quot;ano&quot;</span><span class="s1">: </span><span class="s3">3</span><span class="s1">})</span>
+    <span class="s1">response = client.post(</span><span class="s2">&quot;/v1/materias/&quot;</span><span class="s0">, </span><span class="s1">json={</span><span class="s2">&quot;nome&quot;</span><span class="s1">: </span><span class="s2">&quot;Física&quot;</span><span class="s0">, </span><span class="s2">&quot;ano&quot;</span><span class="s1">: </span><span class="s3">3</span><span class="s1">})</span>
+    <span class="s0">assert </span><span class="s1">response.status_code == </span><span class="s3">400</span>
+
+<span class="s0">def </span><span class="s1">test_criar_questao_valida():</span>
+    <span class="s1">client.post(</span><span class="s2">&quot;/v1/materias/&quot;</span><span class="s0">, </span><span class="s1">json={</span><span class="s2">&quot;nome&quot;</span><span class="s1">: </span><span class="s2">&quot;História&quot;</span><span class="s0">, </span><span class="s2">&quot;ano&quot;</span><span class="s1">: </span><span class="s3">1</span><span class="s1">})</span>
+    <span class="s1">response = client.post(</span><span class="s2">&quot;/v1/questoes/&quot;</span><span class="s0">, </span><span class="s1">json={</span>
+        <span class="s2">&quot;enunciado&quot;</span><span class="s1">: </span><span class="s2">&quot;Quem descobriu o Brasil?&quot;</span><span class="s0">,</span>
+        <span class="s2">&quot;nivel&quot;</span><span class="s1">: </span><span class="s3">1</span><span class="s0">,</span>
+        <span class="s2">&quot;materia&quot;</span><span class="s1">: </span><span class="s3">1</span><span class="s0">,</span>
+        <span class="s2">&quot;total_correta&quot;</span><span class="s1">: </span><span class="s3">1</span>
+    <span class="s1">})</span>
+    <span class="s0">assert </span><span class="s1">response.status_code == </span><span class="s3">200</span>
+    <span class="s0">assert </span><span class="s1">response.json()[</span><span class="s2">&quot;status&quot;</span><span class="s1">] </span><span class="s0">is False</span>
+
+<span class="s0">def </span><span class="s1">test_criar_questao_nivel_invalido():</span>
+    <span class="s1">response = client.post(</span><span class="s2">&quot;/v1/questoes/&quot;</span><span class="s0">, </span><span class="s1">json={</span>
+        <span class="s2">&quot;enunciado&quot;</span><span class="s1">: </span><span class="s2">&quot;Questão inválida&quot;</span><span class="s0">,</span>
+        <span class="s2">&quot;nivel&quot;</span><span class="s1">: </span><span class="s3">4</span><span class="s0">,</span>
+        <span class="s2">&quot;materia&quot;</span><span class="s1">: </span><span class="s3">1</span><span class="s0">,</span>
+        <span class="s2">&quot;total_correta&quot;</span><span class="s1">: </span><span class="s3">1</span>
+    <span class="s1">})</span>
+    <span class="s0">assert </span><span class="s1">response.status_code == </span><span class="s3">400</span>
+
+<span class="s0">def </span><span class="s1">test_listar_questoes_por_nivel():</span>
+    <span class="s1">response = client.get(</span><span class="s2">&quot;/v1/questoes/?nivel=1&quot;</span><span class="s1">)</span>
+    <span class="s0">assert </span><span class="s1">response.status_code == </span><span class="s3">200</span>
+    <span class="s0">assert </span><span class="s1">isinstance(response.json()</span><span class="s0">, </span><span class="s1">list)</span>
+
+<span class="s0">def </span><span class="s1">test_listar_questoes_por_materia():</span>
+    <span class="s1">response = client.get(</span><span class="s2">&quot;/v1/questoes/materias/1/&quot;</span><span class="s1">)</span>
+    <span class="s0">assert </span><span class="s1">response.status_code == </span><span class="s3">200</span>
+    <span class="s0">assert </span><span class="s1">isinstance(response.json()</span><span class="s0">, </span><span class="s1">list)</span>
+
+<span class="s0">def </span><span class="s1">test_criar_alternativa_valida():</span>
+    <span class="s1">client.post(</span><span class="s2">&quot;/v1/materias/&quot;</span><span class="s0">, </span><span class="s1">json={</span><span class="s2">&quot;nome&quot;</span><span class="s1">: </span><span class="s2">&quot;Geografia&quot;</span><span class="s0">, </span><span class="s2">&quot;ano&quot;</span><span class="s1">: </span><span class="s3">1</span><span class="s1">})</span>
+    <span class="s1">client.post(</span><span class="s2">&quot;/v1/questoes/&quot;</span><span class="s0">, </span><span class="s1">json={</span>
+        <span class="s2">&quot;enunciado&quot;</span><span class="s1">: </span><span class="s2">&quot;Maior país do mundo?&quot;</span><span class="s0">,</span>
+        <span class="s2">&quot;nivel&quot;</span><span class="s1">: </span><span class="s3">1</span><span class="s0">,</span>
+        <span class="s2">&quot;materia&quot;</span><span class="s1">: </span><span class="s3">1</span><span class="s0">,</span>
+        <span class="s2">&quot;total_correta&quot;</span><span class="s1">: </span><span class="s3">1</span>
+    <span class="s1">})</span>
+    <span class="s1">response = client.post(</span><span class="s2">&quot;/v1/questao/1/alternativas/&quot;</span><span class="s0">, </span><span class="s1">json={</span><span class="s2">&quot;descricao&quot;</span><span class="s1">: </span><span class="s2">&quot;Rússia&quot;</span><span class="s0">, </span><span class="s2">&quot;correto&quot;</span><span class="s1">: </span><span class="s0">True</span><span class="s1">})</span>
+    <span class="s0">assert </span><span class="s1">response.status_code == </span><span class="s3">200</span>
+
+<span class="s0">def </span><span class="s1">test_bloquear_alternativa_extra_correta():</span>
+    <span class="s1">response = client.post(</span><span class="s2">&quot;/v1/questao/1/alternativas/&quot;</span><span class="s0">, </span><span class="s1">json={</span><span class="s2">&quot;descricao&quot;</span><span class="s1">: </span><span class="s2">&quot;Brasil&quot;</span><span class="s0">, </span><span class="s2">&quot;correto&quot;</span><span class="s1">: </span><span class="s0">True</span><span class="s1">})</span>
+    <span class="s0">assert </span><span class="s1">response.status_code == </span><span class="s3">400</span>
+
+<span class="s0">def </span><span class="s1">test_listar_alternativas():</span>
+    <span class="s1">response = client.get(</span><span class="s2">&quot;/v1/questao/1/alternativas/&quot;</span><span class="s1">)</span>
+    <span class="s0">assert </span><span class="s1">response.status_code == </span><span class="s3">200</span>
+    <span class="s0">assert </span><span class="s1">isinstance(response.json()</span><span class="s0">, </span><span class="s1">list)</span>
+</pre>
+</body>
+</html>
