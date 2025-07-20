@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from typing import List
 
 class MateriaBase(BaseModel):
     nome: str
@@ -40,3 +41,23 @@ class AlternativaOut(AlternativaBase):
     id: int
     class Config:
         orm_mode = True
+
+# Usuário
+class UsuarioCreate(BaseModel):
+    nome: str
+    matricula: str
+
+class UsuarioOut(BaseModel):
+    id: int
+    nome: str
+    matricula: str
+    total_simulados: Optional[int] = 0
+
+    class Config:
+        orm_mode = True
+
+# Resposta
+class RespostaCreate(BaseModel):
+    id_aluno: int
+    questao_id: int
+    alternativas: List[int]

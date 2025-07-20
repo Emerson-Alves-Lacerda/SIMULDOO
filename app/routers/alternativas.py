@@ -15,7 +15,7 @@ def get_db():
 
 @router.get("/{id_questao}/alternativas/", response_model=list[schemas.AlternativaOut])
 def listar_alternativas(id_questao: int, db: Session = Depends(get_db)):
-    return db.query(models.Alternativa).filter(models.Alternativa.questao == id_questao).all()
+    return db.query(models.Alternativa).filter(models.Alternativa.questao_id == id_questao).all()
 
 @router.post("/{id_questao}/alternativas/", response_model=schemas.AlternativaOut)
 def criar_alternativa(id_questao: int, alt: schemas.AlternativaCreate, db: Session = Depends(get_db)):
@@ -24,11 +24,11 @@ def criar_alternativa(id_questao: int, alt: schemas.AlternativaCreate, db: Sessi
         raise HTTPException(status_code=404, detail="Questão não encontrada")
 
     if alt.correto:
-        corretas = db.query(models.Alternativa).filter_by(questao=id_questao, correto=True).count()
+        corretas = db.query(models.Alternativa).filter_by(questao_id=id_questao, correto=True).count()
         if corretas >= questao.total_correta:
             raise HTTPException(status_code=400, detail="Já existem alternativas corretas suficientes")
 
-    nova = models.Alternativa(questao=id_questao, **alt.dict())
+    nova = models.Alternativa(questao_id=id_questao, **alt.dict())
     db.add(nova)
     db.commit()
     db.refresh(nova)

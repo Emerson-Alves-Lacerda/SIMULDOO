@@ -55,13 +55,14 @@ def test_listar_questoes_por_materia():
 
 def test_criar_alternativa_valida():
     client.post("/v1/materias/", json={"nome": "Geografia", "ano": 1})
-    client.post("/v1/questoes/", json={
+    r_q = client.post("/v1/questoes/", json={
         "enunciado": "Maior país do mundo?",
         "nivel": 1,
         "materia": 1,
         "total_correta": 1
     })
-    response = client.post("/v1/questao/1/alternativas/", json={"descricao": "Rússia", "correto": True})
+    id_questao = r_q.json()["id"]
+    response = client.post(f"/v1/questao/{id_questao}/alternativas/", json={"descricao": "Rússia", "correto": True})
     assert response.status_code == 200
 
 def test_bloquear_alternativa_extra_correta():
