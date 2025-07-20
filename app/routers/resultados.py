@@ -22,11 +22,17 @@ def listar_resultados(db: Session = Depends(get_db)):
 
         for rel in relacoes:
             simulado = db.query(Simulado).get(rel.simulado_id)
+            if not simulado:
+                continue
+
             questoes_rel = db.query(AlunoQuestao).filter_by(alunos_id=aluno.id).all()
             questoes_json = []
 
             for qrel in questoes_rel:
                 questao = db.query(Questao).get(qrel.questao_id)
+                if not questao:
+                    continue
+
                 alternativas = db.query(Alternativa).filter_by(questao_id=questao.id).all()
                 marcadas = db.query(AlunoAlternativa).join(Alternativa).filter(
                     AlunoAlternativa.alunos_id == aluno.id,
@@ -60,11 +66,14 @@ def resultado_por_aluno(id: int, db: Session = Depends(get_db)):
     if not aluno:
         return {"erro": "Aluno não encontrado"}
 
-    simulados = []
     relacoes = db.query(AlunoSimulado).filter_by(alunos_id=aluno.id).all()
+    simulados = []
 
     for rel in relacoes:
         simulado = db.query(Simulado).get(rel.simulado_id)
+        if not simulado:
+            continue
+
         questoes_rel = db.query(AlunoQuestao).filter_by(alunos_id=aluno.id).all()
         questoes_json = []
 
