@@ -20,13 +20,10 @@ def list_materias(ano: int = Query(None), db: Session = Depends(get_db)):
     return db.query(models.Materia).all()
 
 @router.post("/", response_model=schemas.MateriaOut)
-def create_materia(materia: schemas.MateriaCreate, db: Session = Depends(get_db)):
-    exists = db.query(models.Materia).filter(
-        models.Materia.nome == materia.nome,
-        models.Materia.ano == materia.ano
-    ).first()
-    if exists:
-        raise HTTPException(status_code=400, detail="Matéria com esse nome e ano já existe")
+def criar_materia(materia: schemas.MateriaCreate, db: Session = Depends(get_db)):
+    existente = db.query(models.Materia).filter_by(nome=materia.nome, ano=materia.ano).first()
+    if existente:
+        return existente  # ou levante um erro ou retorne o existente com o esquema correto
     nova = models.Materia(**materia.dict())
     db.add(nova)
     db.commit()
@@ -35,7 +32,7 @@ def create_materia(materia: schemas.MateriaCreate, db: Session = Depends(get_db)
 
 @router.put("/{id_materia}", response_model=schemas.MateriaOut)
 def update_materia(id_materia: int, materia: schemas.MateriaCreate, db: Session = Depends(get_db)):
-    db_materia = db.query(models.Materia).get(id_materia)
+    db_materia = db.get(models.Materia, id_materia)  # <- Atualizado para evitar warning
     if not db_materia:
         raise HTTPException(status_code=404, detail="Matéria não encontrada")
     db_materia.nome = materia.nome

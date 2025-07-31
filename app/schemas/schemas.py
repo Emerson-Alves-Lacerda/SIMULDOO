@@ -10,10 +10,13 @@ class MateriaBase(BaseModel):
 class MateriaCreate(MateriaBase):
     pass
 
-class MateriaOut(MateriaBase):
+class MateriaOut(BaseModel):
     id: int
+    nome: str
+    ano: int
+    descricao: str | None = None
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class QuestaoBase(BaseModel):
     enunciado: str
@@ -59,5 +62,25 @@ class UsuarioOut(BaseModel):
 # Resposta
 class RespostaCreate(BaseModel):
     id_aluno: int
+    simulado_id: int
     questao_id: int
     alternativas: List[int]
+
+class RespostaOut(BaseModel):
+    aluno: dict
+    simulado_id: int
+    questao_id: int
+    corretas: bool
+    class Config:
+        orm_mode = True
+
+
+class SimuladoCreate(BaseModel):
+    nome: str
+
+class SimuladoOut(BaseModel):
+    id: int
+    nome: str
+    class Config:
+        orm_mode = True
+

@@ -28,6 +28,15 @@ def questoes_por_materia(id_materia: int, db: Session = Depends(get_db)):
 def create_questao(questao: schemas.QuestaoCreate, db: Session = Depends(get_db)):
     if questao.nivel not in [1, 2, 3]:
         raise HTTPException(status_code=400, detail="Nível inválido (deve ser 1, 2 ou 3)")
+
+    existente = db.query(models.Questao).filter(
+        models.Questao.enunciado == questao.enunciado,
+        models.Questao.materia == questao.materia
+    ).first()
+
+    if existente:
+        raise HTTPException(status_code=400, detail="Questão já existe para essa matéria")
+
     nova = models.Questao(**questao.dict(), status=False)
     db.add(nova)
     db.commit()

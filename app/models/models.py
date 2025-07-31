@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.connection.database import Base
 
@@ -11,12 +11,13 @@ class Materia(Base):
     descricao = Column(String, nullable=True)
 
     __table_args__ = (
-        # Restrição única: nome + ano
+        UniqueConstraint("nome", "ano", name="uq_materia_nome_ano"),
         {'sqlite_autoincrement': True},
     )
 
 class Questao(Base):
     __tablename__ = "questoes"
+
 
     id = Column(Integer, primary_key=True, index=True)
     enunciado = Column(String, nullable=False)
@@ -25,17 +26,14 @@ class Questao(Base):
     total_correta = Column(Integer, nullable=False)
     status = Column(Boolean, default=False)
 
-    #alternativas = relationship("Alternativa", back_populates="questao", cascade="all, delete-orphan")
     alternativas = relationship("Alternativa", back_populates="questao", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        UniqueConstraint('enunciado', 'materia', name='uq_questao_enunciado_materia'),
+    )
 
 class Alternativa(Base):
     __tablename__ = "alternativas"
-    #id = Column(Integer, primary_key=True, index=True)
-    #descricao = Column(String, nullable=False)
-    #correto = Column(Boolean, default=False)
-
-    #questao_id = Column(Integer, ForeignKey("questoes.id"))
-    #questao = relationship("Questao", back_populates="alternativas")
     id = Column(Integer, primary_key=True, index=True)
     questao_id = Column(Integer, ForeignKey("questoes.id"))
     descricao = Column(String, nullable=False)

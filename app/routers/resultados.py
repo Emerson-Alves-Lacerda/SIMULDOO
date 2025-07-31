@@ -1,106 +1,113 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session, joinedload
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
 from app.connection.database import SessionLocal
 from app.models.models import Usuario, Simulado, AlunoSimulado, AlunoQuestao, Alternativa, AlunoAlternativa, Questao
-from typing import List
 
 router = APIRouter()
 
 def get_db():
     db = SessionLocal()
-    try: yield db
-    finally: db.close()
+    try:
+        yield db
+    finally:
+        db.close()
 
-@router.get("/resultados")
+# GET /v1/simulados/resultados
+@router.get("/resultados", summary="Listar resultados de todos os alunos e seus simulados")
 def listar_resultados(db: Session = Depends(get_db)):
-    alunos = db.query(Usuario).all()
-    resposta = []
-
-    for aluno in alunos:
-        simulados = []
-        relacoes = db.query(AlunoSimulado).filter_by(alunos_id=aluno.id).all()
-
-        for rel in relacoes:
-            simulado = db.query(Simulado).get(rel.simulado_id)
-            if not simulado:
+    output = []
+    for aluno in db.query(Usuario).all():
+        simulados_data = []
+        # Busca por cada simulado que o aluno participou
+        sim_rels = db.query(AlunoSimulado).filter_by(alunos_id=aluno.id).all()
+        for sim_rel in sim_rels:
+            sim = db.query(Simulado).get(sim_rel.simulado_id)
+            if not sim:
                 continue
-
-            questoes_rel = db.query(AlunoQuestao).filter_by(alunos_id=aluno.id).all()
-            questoes_json = []
-
-            for qrel in questoes_rel:
-                questao = db.query(Questao).get(qrel.questao_id)
-                if not questao:
+            # Busca questões respondidas neste simulado
+            q_rels = db.query(AlunoQuestao).filter_by(
+                alunos_id=aluno.id,
+                simulado_id=sim.id
+            ).all()
+            questoes_list = []
+            for qrel in q_rels:
+                quest = db.query(Questao).get(qrel.questao_id)
+                if not quest:
                     continue
-
-                alternativas = db.query(Alternativa).filter_by(questao_id=questao.id).all()
-                marcadas = db.query(AlunoAlternativa).join(Alternativa).filter(
-                    AlunoAlternativa.alunos_id == aluno.id,
-                    Alternativa.questao_id == questao.id
-                ).all()
-
-                questoes_json.append({
-                    "enunciado": questao.enunciado,
-                    "alternativas": [{"id": a.id, "descricao": a.descricao, "correta": a.correto} for a in alternativas],
-                    "resposta": [{"id": a.alternativa_id} for a in marcadas],
+                alts = db.query(Alternativa).filter_by(questao_id=quest.id).all()
+                marcadas = db.query(AlunoAlternativa).filter_by(
+                    alunos_id=aluno.id
+                ).join(Alternativa).filter(Alternativa.questao_id == quest.id).all()
+                questoes_list.append({
+                    "nome": quest.enunciado,
+                    "alternativas": [
+                        {"id": a.id, "descricao": a.descricao, "correta": a.correta}
+                        for a in alts
+                    ],
+                    "resposta": [
+                        {"id": ma.alternativa_id}
+                        for ma in marcadas
+                    ],
                     "correto": qrel.correto
                 })
-
-            simulados.append({
-                "id": simulado.id,
-                "nome": simulado.nome,
-                "total_acertos": rel.total_acertos,
-                "questoes": questoes_json
+            simulados_data.append({
+                "id": sim.id,
+                "nome": sim.nome,
+                "total_acertos": sim_rel.total_acertos,
+                "total_questoes": len(questoes_list),
+                "percentual": (sim_rel.total_acertos / len(questoes_list) * 100) if questoes_list else 0,
+                "questoes": questoes_list
             })
-
-        resposta.append({
+        output.append({
             "aluno": {"nome": aluno.nome, "matricula": aluno.matricula},
-            "simulados": simulados
+            "simulados": simulados_data
         })
+    return output
 
-    return resposta
-
-@router.get("/resultados/aluno/{id}")
-def resultado_por_aluno(id: int, db: Session = Depends(get_db)):
-    aluno = db.query(Usuario).get(id)
+# GET /v1/simulados/resultados/aluno/{id_aluno}
+@router.get("/resultados/aluno/{id_aluno}", summary="Listar resultados de um aluno específico")
+def resultado_por_aluno(id_aluno: int, db: Session = Depends(get_db)):
+    aluno = db.query(Usuario).get(id_aluno)
     if not aluno:
-        return {"erro": "Aluno não encontrado"}
-
-    relacoes = db.query(AlunoSimulado).filter_by(alunos_id=aluno.id).all()
-    simulados = []
-
-    for rel in relacoes:
-        simulado = db.query(Simulado).get(rel.simulado_id)
-        if not simulado:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+    simulados_data = []
+    sim_rels = db.query(AlunoSimulado).filter_by(alunos_id=aluno.id).all()
+    for sim_rel in sim_rels:
+        sim = db.query(Simulado).get(sim_rel.simulado_id)
+        if not sim:
             continue
-
-        questoes_rel = db.query(AlunoQuestao).filter_by(alunos_id=aluno.id).all()
-        questoes_json = []
-
-        for qrel in questoes_rel:
-            questao = db.query(Questao).get(qrel.questao_id)
-            alternativas = db.query(Alternativa).filter_by(questao_id=questao.id).all()
-            marcadas = db.query(AlunoAlternativa).join(Alternativa).filter(
-                AlunoAlternativa.alunos_id == aluno.id,
-                Alternativa.questao_id == questao.id
-            ).all()
-
-            questoes_json.append({
-                "enunciado": questao.enunciado,
-                "alternativas": [{"id": a.id, "descricao": a.descricao, "correta": a.correto} for a in alternativas],
-                "resposta": [{"id": a.alternativa_id} for a in marcadas],
+        q_rels = db.query(AlunoQuestao).filter_by(
+            alunos_id=aluno.id,
+            simulado_id=sim.id
+        ).all()
+        questoes_list = []
+        for qrel in q_rels:
+            quest = db.query(Questao).get(qrel.questao_id)
+            alts = db.query(Alternativa).filter_by(questao_id=quest.id).all()
+            marcadas = db.query(AlunoAlternativa).filter_by(
+                alunos_id=aluno.id
+            ).join(Alternativa).filter(Alternativa.questao_id == quest.id).all()
+            questoes_list.append({
+                "nome": quest.enunciado,
+                "alternativas": [
+                    {"id": a.id, "descricao": a.descricao, "correta": a.correta}
+                    for a in alts
+                ],
+                "resposta": [
+                    {"id": ma.alternativa_id}
+                    for ma in marcadas
+                ],
                 "correto": qrel.correto
             })
-
-        simulados.append({
-            "id": simulado.id,
-            "nome": simulado.nome,
-            "total_acertos": rel.total_acertos,
-            "questoes": questoes_json
+        simulados_data.append({
+            "id": sim.id,
+            "nome": sim.nome,
+            "total_acertos": sim_rel.total_acertos,
+            "total_questoes": len(questoes_list),
+            "percentual": (sim_rel.total_acertos / len(questoes_list) * 100) if questoes_list else 0,
+            "questoes": questoes_list
         })
-
     return {
         "aluno": {"nome": aluno.nome, "matricula": aluno.matricula},
-        "simulados": simulados
+        "simulados": simulados_data
     }
-
