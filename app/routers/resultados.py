@@ -12,19 +12,16 @@ def get_db():
     finally:
         db.close()
 
-# GET /v1/simulados/resultados
 @router.get("/resultados", summary="Listar resultados de todos os alunos e seus simulados")
 def listar_resultados(db: Session = Depends(get_db)):
     output = []
     for aluno in db.query(Usuario).all():
         simulados_data = []
-        # Busca por cada simulado que o aluno participou
         sim_rels = db.query(AlunoSimulado).filter_by(alunos_id=aluno.id).all()
         for sim_rel in sim_rels:
             sim = db.query(Simulado).get(sim_rel.simulado_id)
             if not sim:
                 continue
-            # Busca questões respondidas neste simulado
             q_rels = db.query(AlunoQuestao).filter_by(
                 alunos_id=aluno.id,
                 simulado_id=sim.id
@@ -64,7 +61,6 @@ def listar_resultados(db: Session = Depends(get_db)):
         })
     return output
 
-# GET /v1/simulados/resultados/aluno/{id_aluno}
 @router.get("/resultados/aluno/{id_aluno}", summary="Listar resultados de um aluno específico")
 def resultado_por_aluno(id_aluno: int, db: Session = Depends(get_db)):
     aluno = db.query(Usuario).get(id_aluno)

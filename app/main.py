@@ -8,8 +8,8 @@ app = FastAPI()
 
 #@app.on_event("startup")
 #def reset_db():
-#    Base.metadata.drop_all(bind=engine)
-#    Base.metadata.create_all(bind=engine)
+#   Base.metadata.drop_all(bind=engine)
+#   Base.metadata.create_all(bind=engine)
 
 
 app.include_router(materias.router, prefix="/v1/materias", tags=["Materias"])
@@ -18,5 +18,5 @@ app.include_router(alternativas.router, prefix="/v1/questao", tags=["Alternativa
 app.include_router(alunos.router, prefix="/v1/aluno", tags=["Alunos"])
 app.include_router(simulados.router, prefix="/v1/simulados", tags=["Simulados"])
 app.include_router(respostas.router, prefix="/v1/resposta", tags=["Respostas"])
-app.include_router(resultados.router, prefix="/v1/simulados", tags=["Resultados"])
+app.include_router(resultados.router,    prefix="/v1/simulados",tags=["Resultados"])
 
