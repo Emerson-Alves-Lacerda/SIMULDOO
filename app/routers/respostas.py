@@ -73,5 +73,5 @@ def registrar_resposta(payload: RespostaCreate, db: Session = Depends(get_db)):
         "aluno": {"id": aluno.id, "nome": aluno.nome},
         "simulado_id": simulado_id,
         "questao_id": questao.id,
-        "correta": correta
+        "corretas": correta
     }

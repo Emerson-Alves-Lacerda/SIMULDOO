@@ -38,7 +38,7 @@ def listar_resultados(db: Session = Depends(get_db)):
                 questoes_list.append({
                     "nome": quest.enunciado,
                     "alternativas": [
-                        {"id": a.id, "descricao": a.descricao, "correta": a.correta}
+                        {"id": a.id, "descricao": a.descricao, "correta": a.correto}
                         for a in alts
                     ],
                     "resposta": [
@@ -86,7 +86,7 @@ def resultado_por_aluno(id_aluno: int, db: Session = Depends(get_db)):
             questoes_list.append({
                 "nome": quest.enunciado,
                 "alternativas": [
-                    {"id": a.id, "descricao": a.descricao, "correta": a.correta}
+                    {"id": a.id, "descricao": a.descricao, "correta": a.correto}
                     for a in alts
                 ],
                 "resposta": [

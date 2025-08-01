@@ -6,10 +6,10 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-#@app.on_event("startup")
-#def reset_db():
-#   Base.metadata.drop_all(bind=engine)
-#   Base.metadata.create_all(bind=engine)
+@app.on_event("startup")
+def reset_db():
+   Base.metadata.drop_all(bind=engine)
+   Base.metadata.create_all(bind=engine)
 
 
 app.include_router(materias.router, prefix="/v1/materias", tags=["Materias"])

@@ -66,6 +66,7 @@ class AlunoQuestao(Base):
     __tablename__ = "aluno_questao"
     alunos_id = Column(Integer, ForeignKey("usuarios.id"), primary_key=True)
     questao_id = Column(Integer, ForeignKey("questoes.id"), primary_key=True)
+    simulado_id = Column(Integer, ForeignKey("simulados.id"), primary_key=True)
     correto = Column(Boolean)
 
 class AlunoAlternativa(Base):
